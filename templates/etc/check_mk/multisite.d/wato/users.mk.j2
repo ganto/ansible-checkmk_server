@@ -1,0 +1,64 @@
+# {{ ansible_managed }}
+# encoding: utf-8
+
+multisite_users = \
+{{'{'}}{%
+
+  for user, params in checkmk_server__multisite_users|dictsort
+
+%}u'{{ user }}': {{'{'}}{%
+
+    for entry in params
+
+%}{%
+      if not entry == 'password'
+
+%}'{{ entry }}': {%
+
+        set value = params[entry]
+%}{%
+        if value is string
+
+%}u'{{ value }}'{%
+
+        elif value is iterable
+
+%}[{%
+          for e in value
+
+%}'{{ e }}'{%
+
+            if not loop.last
+%}, {%
+            endif
+%}{%
+          endfor
+%}]{%
+        else
+
+%}{{ value }}{%
+
+        endif
+%}{%
+        if not loop.last
+
+%}, {%
+        endif
+%}{%
+      endif
+%}{%
+    endfor
+
+%}{{'}'}}{%
+
+    if not loop.last
+
+%}{{'}'}},
+
+  {%
+    endif
+%}{%
+
+  endfor
+
+%}{{'}'}}

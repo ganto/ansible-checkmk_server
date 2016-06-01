@@ -137,6 +137,23 @@
     mode: '0644'
   tags: [ 'role::checkmk_server:multisite' ]
 
+- name: Generate local multisite user definitions
+  template:
+    src: 'etc/check_mk/multisite.d/wato/users.mk.j2'
+    dest: '{{ checkmk_server__site_home }}/{{ checkmk_server__multisite_config_path }}/wato/users.mk'
+    owner: '{{ checkmk_server__user }}'
+    group: '{{ checkmk_server__group }}'
+    mode: '0644'
+  tags: [ 'role::checkmk_server:multisite' ]
+
+- name: Set local multisite user passwords
+  htpasswd:
+    path: '{{ checkmk_server__site_home }}/etc/htpasswd'
+    name: '{{ item }}'
+    password: '{{ checkmk_server__multisite_users[item]["password"] }}'
+  with_items: '{{ checkmk_server__multisite_users|list }}'
+  tags: [ 'role::checkmk_server:multisite' ]
+
 - name: Generate Check_MK WATO multisite definitions
   template:
     src: '{{ lookup("template_src", "etc/check_mk/multisite.d/wato/" + item | basename) }}'
