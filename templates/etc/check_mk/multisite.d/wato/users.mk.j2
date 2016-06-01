@@ -1,0 +1,37 @@
+# {{ ansible_managed }}
+# encoding: utf-8
+
+multisite_users = \
+{{'{'}}{%
+   for user, params in checkmk_server__multisite_users|d({}) | dictsort %}
+{%   set multisite_user_entry = [ "u'" + user + "':" ] %}
+{%   for key in params %}
+{%     if loop.first %}
+{%       set current = [ "{" ] %}
+{%     else %}
+{%       set current = [] %}
+{%     endif %}
+{%     if not key == 'password' %}
+{%       set _ = current.append("'" + key + "': ") %}
+{%       set value = params[key] %}
+{%       if value is string %}
+{%         set _ = current.append("u'" + value + "'") %}
+{%       elif value is iterable %}
+{%         set multisite_list_param = [] %}
+{%         for element in value %}
+{%           set _ = multisite_list_param.append("'" + element + "'") %}
+{%         endfor %}
+{%         set _ = current.append("[" + multisite_list_param | join(", ") + "]") %}
+{%       else %}
+{%         set _ = current.append(value) %}
+{%       endif %}
+{%       if loop.last %}
+{%         set _ = current.append("}") %}
+{%       else %}
+{%         set _ = current.append(",") %}
+{%       endif %}
+{%       set _ = multisite_user_entry.append(current | join()) %}
+{%     endif %}
+{%   endfor %}
+{{ multisite_user_entry | join(" ") }}{% if not loop.last %},
+ {% endif %}{% endfor %}{{'}'}}
