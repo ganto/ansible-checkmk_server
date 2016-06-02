@@ -1,0 +1,57 @@
+{% set fact_user_list = [] %}
+{% for unicode_user in checkmk_server_fact_local_users|d([]) %}
+{%   set _ = fact_user_list.append(unicode_user | replace("u'", "'")) %}
+{% endfor %}
+{# checkmk_server_fact_local_users|list = {{ checkmk_server_fact_local_users|list }}
+# fact_user_list = {{ fact_user_list }} #}
+{% set multisite_user_list = fact_user_list | union(checkmk_server__multisite_users|d({})|list) %}
+{# checkmk_server__multisite_users|list = {{ checkmk_server__multisite_users|list }}
+# multisite_user_list = {{ multisite_user_list }} #}
+# Written by Multisite UserDB
+# encoding: utf-8
+
+multisite_users = \
+{{'{'}}{%
+   for user in multisite_user_list | sort
+%}{%  if not loop.first
+%} {% endif %}
+u'{{ user }}': {{'{'}}{%
+     set key_list = [] %}
+{#   user = {{ user }} #}
+{%   if user in checkmk_server_fact_local_users %}
+{#   checkmk_server_fact_local_users["{{ user }}"] = {{ checkmk_server_fact_local_users[user] }} #}
+{%     set _ = key_list.extend(checkmk_server_fact_local_users[user]|list) %}
+{#     key_list = {{ key_list }} #}
+{%   endif %}
+{%   if user in checkmk_server__multisite_users %}
+{#   checkmk_server__multisite_users["{{ user }}"] = {{ checkmk_server__multisite_users[user] }} #}
+{%     set _ = key_list.extend(checkmk_server__multisite_users[user]|list) %}
+{#     key_list = {{ key_list | unique }} #}
+{%   endif %}
+{%   for key in key_list|unique | sort %}
+{#     key = {{ key }} #}
+{%     if user in checkmk_server_fact_local_users %}
+{%       if key in checkmk_server_fact_local_users[user] %}
+{%         set value = checkmk_server_fact_local_users[user][key] %}
+{%       endif %}
+{%     endif %}
+{%     if user in checkmk_server__multisite_users %}
+{%       if key in checkmk_server__multisite_users[user] %}
+{%         set value = checkmk_server__multisite_users[user][key] %}
+{%       endif %}
+{%     endif %}
+{%     if not key in [ 'password' ] %}
+{%       if key == 'alias' %}
+{%         if (value | length > 12) %}
+{%           set line_break = True %}
+{%         endif %}
+{%       endif %}
+{#       value = {{ value }} #}
+{%       if not loop.first and line_break|d(False) %}            {% endif %}
+'{{ key }}': {% if key == 'alias' %}u{% endif %}{{ value | to_json | replace('"', "'") | replace("\\u00", "\\x") | replace('true', 'True') | replace('false', 'False') }}{% if not loop.last %},{% if line_break|d(False) %}
+
+{% else %} {%     endif %}{% endif %}{% endif %}
+{%   endfor
+%}{{'}'}}{% if not loop.last %},
+{%   endif %}
+{% endfor %}{{'}'}}
