@@ -1,35 +1,47 @@
+{#
+ # This template merges the users read from the original users.mk passed via
+ # ``checkmk_server_fact_local_users`` with the users defined in the Ansible
+ # inventory ``checkmk_server__multisite_users``. This is necessary as users
+ # from remote directories such as LDAP or Active Directory are written down
+ # to users.mk and obviously shouldn't be deleted by Ansible.
+ #
+ # The ``multisite_users`` variable in users.mk is regular Python dictionary
+ # where the user name and alias are unicode strings. All other strings are
+ # regular Python 2 strings.
+ #
+ # The template tries to imitate the original variable formatting to avoid
+ # rewriting users.mk in case no content change happened.
+ #
+ #}
 {% set fact_user_list = [] %}
 {% for unicode_user in checkmk_server_fact_local_users|d([]) %}
 {%   set _ = fact_user_list.append(unicode_user | replace("u'", "'")) %}
 {% endfor %}
-{# checkmk_server_fact_local_users|list = {{ checkmk_server_fact_local_users|list }}
-# fact_user_list = {{ fact_user_list }} #}
 {% set multisite_user_list = fact_user_list | union(checkmk_server__multisite_users|d({})|list) %}
-{# checkmk_server__multisite_users|list = {{ checkmk_server__multisite_users|list }}
-# multisite_user_list = {{ multisite_user_list }} #}
 # Written by Multisite UserDB
 # encoding: utf-8
 
 multisite_users = \
 {{'{'}}{%
-   for user in multisite_user_list | sort
-%}{%  if not loop.first
-%} {% endif %}
+  for user in multisite_user_list | sort %}
+{%  if not loop.first %}
+{#
+ # Indent subsequent user dictionaries to align with first user
+ #}
+ {% endif %}
 u'{{ user }}': {{'{'}}{%
      set key_list = [] %}
-{#   user = {{ user }} #}
 {%   if user in checkmk_server_fact_local_users %}
-{#   checkmk_server_fact_local_users["{{ user }}"] = {{ checkmk_server_fact_local_users[user] }} #}
 {%     set _ = key_list.extend(checkmk_server_fact_local_users[user]|list) %}
-{#     key_list = {{ key_list }} #}
 {%   endif %}
 {%   if user in checkmk_server__multisite_users %}
-{#   checkmk_server__multisite_users["{{ user }}"] = {{ checkmk_server__multisite_users[user] }} #}
 {%     set _ = key_list.extend(checkmk_server__multisite_users[user]|list) %}
-{#     key_list = {{ key_list | unique }} #}
 {%   endif %}
-{%   for key in key_list|unique | sort %}
-{#     key = {{ key }} #}
+{#
+ # Avoid setting properties only used by Ansible
+ #}
+{%   set key_list = key_list | difference(checkmk_server__ansible_user_keys|d([])) %}
+{%   for key in key_list | unique | sort %}
 {%     if user in checkmk_server_fact_local_users %}
 {%       if key in checkmk_server_fact_local_users[user] %}
 {%         set value = checkmk_server_fact_local_users[user][key] %}
@@ -40,18 +52,49 @@ u'{{ user }}': {{'{'}}{%
 {%         set value = checkmk_server__multisite_users[user][key] %}
 {%       endif %}
 {%     endif %}
-{%     if not key in [ 'password' ] %}
-{%       if key == 'alias' %}
-{%         if (value | length > 12) %}
-{%           set line_break = True %}
-{%         endif %}
+{#
+ # If the alias name is too long, the dict members are seperated by a line break
+ #}
+{%     if key == 'alias' %}
+{%       if (value | length > 12) %}
+{%         set line_break = True %}
 {%       endif %}
-{#       value = {{ value }} #}
-{%       if not loop.first and line_break|d(False) %}            {% endif %}
-'{{ key }}': {% if key == 'alias' %}u{% endif %}{{ value | to_json | replace('"', "'") | replace("\\u00", "\\x") | replace('true', 'True') | replace('false', 'False') }}{% if not loop.last %},{% if line_break|d(False) %}
+{%     endif %}
+{%     if not loop.first and line_break|d(False) %}
+{#
+ # Indent user dict members to align with alias key
+ #}
+            {%
+       endif %}
+'{{ key }}': {%
+       if key == 'alias' %}
+{#
+ # Mark alias value as unicode string
+ #}
+u{%    endif %}
+{#
+ # Do some trickery to get the quotes and unicode characters right
+ #}
+{{ value | to_json | replace('"', "'") | replace("\\u00", "\\x") | replace('true', 'True') | replace('false', 'False') }}{%
+       if not loop.last %}
+,{%      if line_break|d(False) %}
+{#
+ # Insert a line break before the next dict member if requested
+ #}
 
-{% else %} {%     endif %}{% endif %}{% endif %}
-{%   endfor
-%}{{'}'}}{% if not loop.last %},
+{%       else %}
+ {%      endif %}
+{%     endif %}
+{%   endfor %}
+{#
+ # Final '}' to close the user dict
+ #}
+{{'}'}}{%
+     if not loop.last %}
+,
 {%   endif %}
-{% endfor %}{{'}'}}
+{% endfor %}
+{#
+ # Final '}' to close the multisite_users dict variable
+ #}
+{{'}'}}
