@@ -5,6 +5,10 @@
  # from remote directories such as LDAP or Active Directory are written down
  # to users.mk and obviously shouldn't be deleted by Ansible.
  #
+ # ``checkmk_server__multisite_user_defaults`` is used to set some default
+ # properties to new users defined in ``checkmk_server__multisite_users`` in
+ # case they don't define the properties themselves.
+ #
  # The ``multisite_users`` variable in users.mk is regular Python dictionary
  # where the user name and alias are unicode strings. All other strings are
  # regular Python 2 strings.
@@ -36,12 +40,19 @@ u'{{ user }}': {{'{'}}{%
 {%   endif %}
 {%   if user in checkmk_server__multisite_users %}
 {%     set _ = key_list.extend(checkmk_server__multisite_users[user]|list) %}
+{#
+ # If the user is new, make sure to include the default property keys
+ #}
+{%     if user not in checkmk_server_fact_local_users %}
+{%       set _ = key_list.extend(checkmk_server__multisite_user_defaults|d([])|list) %}
+{%     endif %}
 {%   endif %}
 {#
  # Avoid setting properties only used by Ansible
  #}
 {%   set key_list = key_list | difference(checkmk_server__ansible_user_keys|d([])) %}
 {%   for key in key_list | unique | sort %}
+{%     set value = none %}
 {%     if user in checkmk_server_fact_local_users %}
 {%       if key in checkmk_server_fact_local_users[user] %}
 {%         set value = checkmk_server_fact_local_users[user][key] %}
@@ -51,6 +62,12 @@ u'{{ user }}': {{'{'}}{%
 {%       if key in checkmk_server__multisite_users[user] %}
 {%         set value = checkmk_server__multisite_users[user][key] %}
 {%       endif %}
+{%     endif %}
+{#
+ # If a value is not defined yet, get it from the defaults
+ #}
+{%     if value == none %}
+{%       set value = checkmk_server__multisite_user_defaults[key] %}
 {%     endif %}
 {#
  # If the alias name is too long, the dict members are seperated by a line break
