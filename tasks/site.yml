@@ -1,8 +1,15 @@
 ---
 # vim: foldmarker=[[[,]]]:foldmethod=marker
 
+# IMPORTANT:
+# These tasks are run for each Check_MK site defined
+# in `checkmk_server__sites`. This means they can run multiple
+# times per server. If the monitoring site is a remote slave,
+# they might even run on a different server. The site configuration
+# is available through `site_item`.
+
 # Check_MK site configuration [[[1
-- name: Run site setup
+- name: Site configuration via omd
   block:
 
   - name: Get Check_MK site version
