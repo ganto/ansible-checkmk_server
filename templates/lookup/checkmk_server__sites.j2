@@ -14,7 +14,7 @@
 {%   set _ = _local_site.update({'delegate_to': inventory_hostname}) %}
 {%   set _ = _local_site.update({'group': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'home': checkmk_server__site_home}) %}
-{%   set _ = _local_site.update({'hostname': checkmk_server__hostname}) %}
+{%   set _ = _local_site.update({'fqdn': checkmk_server__fqdn}) %}
 {%   set _ = _local_site.update({'multisite_replication': ''}) %}
 {%   set _ = _local_site.update({'name': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'omd_config': checkmk_server__omd_config}) %}
@@ -108,15 +108,15 @@
 {%       set _ = _site_config.update({'master_delegate_to': inventory_hostname}) %}
 {%     endif %}
 {#
- #  If hostname for the site is not defined, query server facts
+ #  If fqdn for the site is not defined, query server facts
  #}
-{%     if not 'hostname' in _site_config %}
-{%       if 'checkmk_server__hostname' in hostvars[_site_config.delegate_to].keys() %}
-{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].checkmk_server__hostname}) %}
+{%     if not 'fqdn' in _site_config %}
+{%       if 'checkmk_server__fqdn' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'fqdn': hostvars[_site_config.delegate_to].checkmk_server__fqdn}) %}
 {%       elif 'ansible_fqdn' in hostvars[_site_config.delegate_to].keys() %}
-{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].ansible_fqdn}) %}
+{%         set _ = _site_config.update({'fqdn': hostvars[_site_config.delegate_to].ansible_fqdn}) %}
 {%       else %}
-{%         set _ = _site_config.update({'hostname': _site_config.delegate_to + "." + ansible_domain}) %}
+{%         set _ = _site_config.update({'fqdn': _site_config.delegate_to + "." + ansible_domain}) %}
 {%       endif %}
 {%     endif %}
 {#
@@ -160,7 +160,7 @@
 {%       endif %}
 {%     endif %}
 {%     if not 'livestatus_socket' in _site_config.keys() %}
-{%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.hostname + ':' + _site_config.livestatus_port}) %}
+{%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.fqdn + ':' + _site_config.livestatus_port}) %}
 {%     endif %}
 {%     set _ = _site_config.dependent_vars.update({'etc_services__dependent_list': [{'name': 'check-mk-livestatus-' + _site_config.name, 'port': _site_config.livestatus_port, 'comment': 'Check_MK server Livestatus'}]}) %}
 {#
@@ -199,7 +199,7 @@
  #}
 {%     if not 'multisite_url' in _site_config.keys() %}
 {#  TODO: properly set http/https #}
-{%       set _ = _site_config.update({'multisite_url': 'https://' + _site_config.hostname + _site_config.multisite_url_prefix + 'check_mk/'}) %}
+{%       set _ = _site_config.update({'multisite_url': 'https://' + _site_config.fqdn + _site_config.multisite_url_prefix + 'check_mk/'}) %}
 {%     endif %}
 {#
  #  Make sure 'disabled' is defined
