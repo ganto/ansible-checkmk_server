@@ -38,9 +38,9 @@ checkmk_server__site_update: False
 # Custom patches to apply after installing Check_MK package
 checkmk_server__patches:
   - patch: 'check-mk-raw-1.2.8-set-https-proxy-header.patch'
-    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_version__suffix }}/skel/etc/apache/apache-own.conf'
+    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_server__version_suffix }}/skel/etc/apache/apache-own.conf'
   - patch: 'check-mk-raw-1.2.8p4-read-X-Forwarded-Port-header.patch'
-    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_version__suffix }}/skel/etc/apache/conf.d/omd.conf'
+    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_server__version_suffix }}/skel/etc/apache/conf.d/omd.conf'
 
                                                                    # ]]]
 # .. envvar:: checkmk_server__ferm_dependent_rules [[[

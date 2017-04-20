@@ -1,7 +1,4 @@
 ---
-- debug:
-    var: checkmk_server__sites
-
 - name: Check that involved distributed sites servers are play hosts
   assert:
     that: checkmk_server__sites | map(attribute="delegate_to") | list | issubset(play_hosts)
@@ -34,7 +31,6 @@
              if (not checkmk_server__register_download | skipped)
              else checkmk_server__raw_package }}'
     state: present
-  ignore_errors: '{{ ansible_check_mode }}'
   register: checkmk_server__register_deb_install
   when: (not checkmk_server__register_version.stdout) and
         ((checkmk_server__raw_package | splitext)[1] == '.deb')
@@ -52,7 +48,6 @@
     src: '{{ item.patch }}'
     dest: '{{ item.file }}'
     basedir: '/'
-  ignore_errors: '{{ ansible_check_mode }}'
   with_items: '{{ checkmk_server__patches }}'
   when: (checkmk_server__register_apt_install | changed) or
         (checkmk_server__register_deb_install | changed)
@@ -82,6 +77,3 @@
 
 - name: Re-read local facts
   action: setup
-
-- debug:
-    var: ansible_local.checkmk_server
