@@ -598,63 +598,15 @@ checkmk_server__site_cfg_netif_description:
 checkmk_server__site_packages: []
                                                                    # ]]]
                                                                    # ]]]
-# PKI Configuration [[[
-# ---------------------
+# Configuration for other Ansible roles [[[
+# -----------------------------------------
 
-# .. envvar:: checkmk_server__pki [[[
+# .. envvar:: checkmk_server__apache__dependent_vhosts [[[
 #
-# Enable or disable support for HTTPS in Check_MK server (using
-# debops.pki_).
-checkmk_server__pki: '{{ (True
-                          if (ansible_local|d() and ansible_local.pki|d() and
-                              ansible_local.pki.enabled|d() | bool)
-                          else False) | bool }}'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__pki_path [[[
-#
-# Base path for PKI directory.
-checkmk_server__pki_path: '{{ ansible_local.pki.path
-                              if (ansible_local|d() and ansible_local.pki|d() and
-                                  ansible_local.pki.path|d())
-                              else "/etc/pki/realms" }}'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__pki_realm [[[
-#
-# Default PKI realm used by Check_MK server.
-checkmk_server__pki_realm: '{{ ansible_local.pki.realm
-                               if (ansible_local|d() and ansible_local.pki|d() and
-                                   ansible_local.pki.realm|d())
-                               else "domain" }}'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__pki_ca [[[
-#
-# Root CA certificate, relative to :envvar:`checkmk_server__pki_realm`.
-checkmk_server__pki_ca: 'CA.crt'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__pki_crt [[[
-#
-# Host certificate, relative to :envvar:`checkmk_server__pki_realm`.
-checkmk_server__pki_crt: 'default.crt'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__pki_key [[[
-#
-# Host private key, relative to :envvar:`checkmk_server__pki_realm`.
-checkmk_server__pki_key: 'default.key'
-
-                                                                   # ]]]
-# .. envvar:: checkmk_server__tls_options [[[
-#
-# Additional Apache mod_ssl options. Valid configuration keys:
-# ``SSLCipherSuite``, ``SSLHonorCipherOrder``, ``SSLProtocols``,
-# ``SSLStrictSNIVHostCheck``
-checkmk_server__tls_options:
-  SSLHonorCipherOrder: 'On'
-  SSLCipherSuite: 'ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS'
+# Configuration for debops.apache_ Ansible role.
+checkmk_server__apache__dependent_vhosts:
+  - name: '{{ checkmk_server__fqdn }}'
+    by_role: 'debops-contrib.checkmk_server'
                                                                    # ]]]
                                                                    # ]]]
                                                                    # ]]]

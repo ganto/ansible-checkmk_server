@@ -1,60 +1,10 @@
 ---
 # vim: foldmarker=[[[,]]]:foldmethod=marker
 
-#- debug:
-#    var: checkmk_server__sites
-#- fail:
-#    msg: 'bla'
-
-- name: Set TLS options
-  template:
-    src: 'etc/apache2/mods-available/ssl.conf.j2'
-    dest: '/etc/apache2/mods-available/ssl.conf'
-    owner: 'root'
-    group: 'root'
-    mode: '0644'
-  when: checkmk_server__pki|d(False)
-  notify: [ 'Reload apache2' ]
-
-- name: Check apache2 mod_headers status
-  stat:
-    path: '/etc/apache2/mods-enabled/headers.load'
-  register: checkmk_server_register_mod_headers
-  changed_when: False
-  always_run: True
-
-- name: Enable apache2 mod_headers
-  command: 'a2enmod headers'
-  when: not checkmk_server_register_mod_headers.stat.exists
-  notify: [ 'Reload apache2' ]
-
-- name: Check apache2 mod_ssl status
-  stat:
-    path: '/etc/apache2/mods-enabled/ssl.load'
-  register: checkmk_server_register_mod_ssl
-  changed_when: False
-  always_run: True
-
-- name: Enable apache2 mod_ssl
-  command: '{{ item }}'
-  with_items:
-    - 'a2enmod ssl'
-    - 'a2ensite default-ssl'
-  when: checkmk_server__pki|d(False) and not checkmk_server_register_mod_ssl.stat.exists
-  notify: [ 'Reload apache2' ]
-
-- name: Disable apache2 mod_ssl
-  command: '{{ item }}'
-  with_items:
-    - 'a2dismod ssl'
-    - 'a2dissite default-ssl'
-  when: not checkmk_server__pki|d(False) and checkmk_server_register_mod_ssl.stat.exists
-  notify: [ 'Reload apache2' ]
-
 - name: Manage SSH keys for monitoring and site synchronization
   include: ssh.yml
 
-- name: Manage Check_MK site
+- name: Manage Check_MK sites
   include: site.yml
   with_items: '{{ checkmk_server__sites }}'
   loop_control:
@@ -68,6 +18,9 @@
   tags:
     - 'role::checkmk_server:multisite'
     - 'role::checkmk_server:users'
+
+- name: Trigger reload/restart handlers
+  meta: flush_handlers
 
 - name: Login on distributed sites
   include: login.yml
