@@ -24,6 +24,7 @@
 
     - role: debops.apache
       tags: [ 'role::apache' ]
+      apache__dependent_snippets: '{{ checkmk_server__apache__dependent_snippets }}'
       apache__dependent_vhosts: '{{ checkmk_server__apache__dependent_vhosts }}'
 
     - role: debops.users

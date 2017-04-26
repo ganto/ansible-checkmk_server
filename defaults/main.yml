@@ -603,10 +603,23 @@ checkmk_server__site_packages: []
 
 # .. envvar:: checkmk_server__apache__dependent_vhosts [[[
 #
-# Configuration for debops.apache_ Ansible role.
+# Configuration for debops.apache_ Ansible role. By default it will create
+# a dedicated Apache virtual host which includes the reverse proxy
+# configuration files provided by the `check-mk-raw` upstream package.
 checkmk_server__apache__dependent_vhosts:
   - name: '{{ checkmk_server__fqdn }}'
+    include: [ '/omd/apache/*.conf' ]
     by_role: 'debops-contrib.checkmk_server'
+
+                                                                   # ]]]
+# .. envvar:: checkmk_server__apache__dependent_snippets [[[
+#
+# Configuration for debops.apache_ Ansible role. By default it will disable
+# The Apache configuration snippet which is installed by the `check-mk-raw`
+# upstream package.
+checkmk_server__apache__dependent_snippets:
+  'zzz_omd':
+    enabled: False
                                                                    # ]]]
                                                                    # ]]]
                                                                    # ]]]
