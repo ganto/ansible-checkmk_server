@@ -40,6 +40,7 @@
 {%     endif %}
 {%     set _ = _local_site.dependent_vars.update({'users__dependent_accounts': [ _user ]}) %}
 {%     set _ = _local_site.dependent_vars.update({'etc_services__dependent_list': []}) %}
+{%     set _ = _local_site.dependent_vars.update({'ferm__dependent_rules': []}) %}
 
 {#
  #  The site alias must be set
@@ -163,6 +164,17 @@
 {%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.fqdn + ':' + _site_config.livestatus_port}) %}
 {%     endif %}
 {%     set _ = _site_config.dependent_vars.update({'etc_services__dependent_list': [{'name': 'check-mk-livestatus-' + _site_config.name, 'port': _site_config.livestatus_port, 'comment': 'Check_MK server Livestatus'}]}) %}
+{#
+ #  Define livestatus firewall access
+ #}
+{%    if not 'livestatus_allow' in _site_config %}
+{%      if 'checkmk_server__livestatus_allow' in hostvars[_site_config.delegate_to].keys() %}
+{%        set _ = _site_config.update({'livestatus_allow': hostvars[_site_config.delegate_to].checkmk_server__livestatus_allow}) %}
+{%      else %}
+{%        set _ = _site_config.update({'livestatus_allow': hostvars[_site_config.master_delegate_to].ansible_all_ipv4_addresses}) %}
+{%      endif %}
+{%    endif %}
+{%    set _ = _site_config.dependent_vars.update({'ferm__dependent_rules': [{'type': 'accept', 'dport': [ _site_config.livestatus_port ], 'saddr': _site_config.livestatus_allow, 'accept_any': False, 'weight': '40', 'by_role': 'debops-contrib.checkmk_server'}]}) %}
 {#
  #  Define OMD configuration
  #}

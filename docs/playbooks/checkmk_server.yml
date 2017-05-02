@@ -20,7 +20,7 @@
       tags: [ 'role::ferm' ]
       ferm__dependent_rules:
         - '{{ apache__ferm__dependent_rules }}'
-        - '{{ checkmk_server__ferm_dependent_rules }}'
+        - '{{ ansible_local.checkmk_server | map(attribute="dependent_vars.ferm__dependent_rules") | list }}'
 
     - role: debops.apache
       tags: [ 'role::apache' ]
