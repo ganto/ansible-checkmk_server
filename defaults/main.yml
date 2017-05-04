@@ -582,6 +582,7 @@ checkmk_server__apache__dependent_vhosts:
 checkmk_server__apache__dependent_snippets:
   'zzz_omd':
     enabled: False
+    type: 'dont-create'
                                                                    # ]]]
                                                                    # ]]]
                                                                    # ]]]
