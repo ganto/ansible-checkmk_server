@@ -77,9 +77,3 @@
 
 - name: Re-read local facts
   action: setup
-
-- debug:
-    var: checkmk_server__sites
-
-- fail:
-    msg: check

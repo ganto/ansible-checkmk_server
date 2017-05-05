@@ -18,8 +18,6 @@
   when: (not item.connection|d('remote') == 'local')
   with_items: '{{ checkmk_server__sites }}'
 
-- debug: var=checkmk_server__register_multisite_login
-
 - name: Get Multisite distribution secrets
   uri:
     url: '{{ item.location }}'
@@ -31,8 +29,6 @@
   when: not item | skipped
   with_items: '{{ checkmk_server__register_multisite_login.results
                   if "results" in checkmk_server__register_multisite_login else [] }}'
-
-- debug: var=checkmk_server__register_multisite_automation_login
 
 - name: Generate distributed sites configuration
   template:
