@@ -38,19 +38,6 @@
     when: ('sshkeys' in site_item) and
           site_item.sshkeys.publickey_file|d(False)
 
-  - name: Read SSH public key
-    command: 'cat {{ site_item.home }}/.ssh/id_rsa.pub'
-    register: checkmk_server__register_ssh_public_key
-    changed_when: False
-
-  - name: Show SSH public key of site '{{ site_item.name }}'
-    debug:
-      var: checkmk_server__register_ssh_public_key.stdout
-      verbosity: 1
-
-  - name: Re-generate local facts
-    include: facts.yml
-
   # delegate block
   delegate_to: '{{ site_item.delegate_to
                    if (not site_item.delegate_to == inventory_hostname) else omit }}'
