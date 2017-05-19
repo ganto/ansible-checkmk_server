@@ -1,10 +1,13 @@
 {#
- # Create a facts file with the sites hosted on the involved host.
+ # Create a facts file containing the sites hosted on the involved host.
  #
- # Distributed slaves sites are defined on the master server, therefore
- # it may happen, that the facts file is merged from multiple configuration
- # sources. Sites which are about to be deleted must not be listed in the
- # resulting facts file.
+ # Distributed slaves sites are defined in the inventory of the master server,
+ # therefore it may happen, that the facts file is merged from multiple
+ # configuration sources (inventory from master host and local facts from
+ # slave host).
+ #
+ # Sites which are about to be deleted must not be listed in the resulting
+ # facts file.
  #}
 {% set _site_facts = {} %}
 {% if (site_item.delegate_to in hostvars) and
